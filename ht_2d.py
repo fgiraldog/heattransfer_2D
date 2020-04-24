@@ -6,19 +6,17 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
 q = 1.
-h = 1.
 t_f = 5.
-h_f = 1.
 h_l = 0.
 delta = 0.05
 h = 1.*delta
+h_f = 2.*delta
 n = int(1/delta) + 1 # numero de nodos
 
 t = symarray('t',(n,n)) # nodos
-
 equations = []
-
 counter = 0
+
 for i in range(0,n):
 	for j in range(0,n):
 
@@ -117,8 +115,6 @@ for i in range(0,n):
 			equations.append(Eq(t[i,j],t_f))
 			counter+=1
 
-
-print(counter)
 variables = []
 for i in range(0,n):
 	for j in range(0,n):
@@ -126,25 +122,39 @@ for i in range(0,n):
 
 a, b = linear_eq_to_matrix(equations, variables)
 
-print(a.shape)
 a = np.array(a).astype(np.float64)
 b = np.array(b).astype(np.float64)
 
 t = np.around(np.linalg.solve(a,b), decimals = 3)
-
-plt.figure()
-plt.imshow(t.reshape(n,n), cmap = cm.viridis)
-clb = plt.colorbar()
-clb.ax.set_title('$^{\circ}$ C')
-plt.axis('off')
-plt.show()
-
-fig = plt.figure()
-ax = fig.gca(projection='3d')
 x = np.linspace(0,1,n)
-y = np.linspace(0,1,n)
+y = np.linspace(1,0,n)
 x,y = np.meshgrid(x,y)
-surf = ax.plot_surface(x, y, t.reshape(n,n), cmap=cm.viridis, linewidth=0, antialiased=False)
-clb = plt.colorbar(surf)
-clb.ax.set_title('$^{\circ}$ C')
+
+fig = plt.figure(figsize = (16,5))
+ax1 = fig.add_subplot(1,3,1)
+ax1.imshow(t.reshape(n,n), cmap = cm.viridis, extent = [0,1,0,1], aspect = 'auto')
+ax1.set_xticks([0,0.25,0.5,0.75,1])
+ax1.set_yticks([0,0.25,0.5,0.75,1])
+ax1.set_title('Temperatura por nodo')
+ax1.set_xlabel('$x$ (m)')
+ax1.set_ylabel('$y$ (m)')
+
+ax2 = fig.add_subplot(1,3,2)
+CS = ax2.contour(x, y, t.reshape(n,n))
+ax2.clabel(CS, inline=1, fontsize=10)
+ax2.set_xticks([0,0.25,0.5,0.75,1])
+ax2.set_yticks([0,0.25,0.5,0.75,1])
+ax2.set_title('Líneas de contorno')
+ax2.set_xlabel('$x$ (m)')
+ax2.set_ylabel('$y$ (m)')
+
+ax3 = fig.add_subplot(1,3,3, projection='3d', aspect = 'auto')
+surf = ax3.plot_surface(x, y, t.reshape(n,n), cmap=cm.viridis, linewidth=0, antialiased=False)
+ax3.set_xticks([0,0.25,0.5,0.75,1])
+ax3.set_yticks([0,0.25,0.5,0.75,1])
+ax3.set_title('Proyección en 3D')
+ax3.set_xlabel('$x$ (m)')
+ax3.set_ylabel('$y$ (m)')
+
+plt.tight_layout()
 plt.show()
