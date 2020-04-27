@@ -5,16 +5,18 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-h_l = 0.
-delta = 0.05
-h = 1.*delta
-h_f = 1.*delta
-q = 1.*(delta**2)
-n = int(1/delta) + 1 # numero de nodos
+delta = 0.05 # espaciamiento entre nodos
 
+h_l = 0. # frontera aislada
+h = 1.*delta # frontera externa
+h_f = 1.*delta # frontera interna
+
+q = 1.*(delta**2) # generación de calor
+
+n = int(1/delta) + 1 # numero de nodos
 t = symarray('t',(n,n)) # nodos
-equations = []
-counter = 0
+equations = [] # array de ecuaciones
+counter = 0 # conteo para verificación
 
 for i in range(0,n):
 	for j in range(0,n):
@@ -28,12 +30,12 @@ for i in range(0,n):
 				equations.append(Eq(t[i,j],0))
 				counter+=1
 
-			elif i*delta == 0.75:
+			elif i*delta == 0.75: # frontera interna
 				equations.append(Eq(t[i-1,j] + t[i,j+1] - (t[i,j]*(2+h+h_f)),0))
 				counter+=1
 
 			else: # demas
-				equations.append(Eq(2*t[i,j+1] + t[i+1,j] + t[i-1,j] - 2*t[i,j]*(2+h_l),0)) #REVISAR
+				equations.append(Eq(2*t[i,j+1] + t[i+1,j] + t[i-1,j] - 2*t[i,j]*(2+h_l),0))
 				counter+=1
 
 		if j == n-1: # frontera vertical der
@@ -55,18 +57,17 @@ for i in range(0,n):
 				counter+=1
 
 		if i == n-1: # frontera horizontal inf
-			if j*delta < 0.25 and j*delta > 0:
+			if j*delta < 0.25 and j*delta > 0: # puntos en el fluido
 				equations.append(Eq(t[i,j],0))
 				counter+=1
 
-			elif j*delta > 0.25 and j < n-1: # demas
-				equations.append(Eq(2*t[i-1,j] + t[i,j-1] + t[i,j+1] - 2*t[i,j]*(2+h_l),0)) #REVISAR
-				counter+=1
-
-			elif j*delta == 0.25:
+			elif j*delta == 0.25: # frontera interna
 				equations.append(Eq(t[i-1,j] + t[i,j+1] - (t[i,j]*(2+h_l+h_f)),0))
 				counter+=1
 
+			elif j*delta > 0.25 and j < n-1: # demas
+				equations.append(Eq(2*t[i-1,j] + t[i,j-1] + t[i,j+1] - 2*t[i,j]*(2+h_l),0))
+				counter+=1
 
 		#Frontera rara
 		if i*delta == 0.75 and j > 0 and j*delta < 0.25:
