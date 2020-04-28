@@ -31,7 +31,7 @@ for i in range(0,n):
 				counter+=1
 
 			elif i*delta == 0.75: # frontera interna
-				equations.append(Eq(t[i-1,j] + t[i,j+1] - (t[i,j]*(2+h+h_f)),0))
+				equations.append(Eq(t[i-1,j] + t[i,j+1] - (t[i,j]*(2+h_l+h_f)),0))
 				counter+=1
 
 			else: # demas
