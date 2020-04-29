@@ -165,13 +165,6 @@ ax2.set_title('Líneas de contorno')
 ax2.set_xlabel('$x$ (m)')
 ax2.set_ylabel('$y$ (m)')
 
-ax3 = fig.add_subplot(1,3,3, projection='3d', aspect = 'auto')
-surf = ax3.contourf(x, y, t.reshape(n,n), levels = 25, cmap=cm.viridis)
-ax3.set_xticks([0,0.25,0.5,0.75,1])
-ax3.set_yticks([0,0.25,0.5,0.75,1])
-ax3.set_title('Proyección en 3D')
-ax3.set_xlabel('$x$ (m)')
-ax3.set_ylabel('$y$ (m)')
 
 plt.tight_layout()
 plt.show()
