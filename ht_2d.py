@@ -5,13 +5,50 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
+
+Q = 15000. # Calor generado en cuadrante simulado
 delta = 0.05 # espaciamiento entre nodos
+l = 1. # Longitud de la pieza
+L = 0.3 # Media longitud del lado del perfil de la pieza
+k = 5. # Conductividad de la pieza
+
+T_e = 25. # Temperatura exterior (aire)
+v_e = 10. # Velocidad del aire
+u_e = 1. # Viscocidad cinematica del aire
+k_e = 1. # Conductividad del aire
+r_e = 1. # Densidad del aire
+Cp_e = 1. # Capacidad calorífica del aire
+alpha_e = k_e/(r_e*Cp_e) # Difusividad termica del aire
+Pr_e = u_e/alpha_e # Prandtl para el aire
+Re_e = v_e*l/u_e # Reynolds para el aire
+if Re_e < 10**5:
+	Nu_e = 0.664*(Re_e**(1/2))*(Pr_e**(1/3))
+else:
+	Nu_e = 0.037*((Re_e**(4/5))-871)*(Pr_e**(1/3))
+h_e = Nu_e*k_e/l 
+
+D = L/2
+T_f = 25. # Temperatura interior (refrigerante)
+v_f = 10. # Velocidad del refrigerante
+u_f = 1. # Viscocidad cinematica del refrigerante
+k_f = 1. # Conductividad del refrigerante
+r_f = 1. # Densidad del refrigerante
+Cp_f = 1. # Capacidad calorífica del refrigerante
+alpha_f = k_f/(r_f*Cp_f) # Difusividad termica del refrigerante
+Pr_f = u_f/alpha_f # Prandtl para el refrigerante
+Re_f = v_f*D/u_f # Reynolds para el refrigerante
+if Re_f < 10**4:
+	Nu_f = 4.36
+else:
+	Nu_f = 0.023*(Re_f**(4/5))*(Pr_f**(1/3))
+h_f = Nu_f*k_f/D 
 
 h_l = 0. # frontera aislada
-h = 1.*delta # frontera externa
-h_f = 10.*delta # frontera interna
+h_e = (h_e*L/k)*delta # frontera externa
+h_f = (h_f*L/k)*delta # frontera interna
 
-q = 1.*(delta**2) # generación de calor
+q = Q/(l*3*(0.25*L)**2) # Calor por unidad de volumen
+q = (q*L**2/(k*T_e))*(delta**2) # generación de calor adimensional
 
 n = int(1/delta) + 1 # numero de nodos
 t = symarray('t',(n,n)) # nodos
@@ -23,7 +60,7 @@ for i in range(0,n):
 		# Fronteras
 		if j == 0: # frontera vertical izq
 			if i == 0: # punto superior
-				equations.append(Eq(t[i+1,j] + t[i,j+1] - (t[i,j]*(2+h+h_l)),0))
+				equations.append(Eq(t[i+1,j] + t[i,j+1] - (t[i,j]*(2+h_e+h_l)),0))
 				counter+=1
 
 			elif i > 0 and i*delta < 0.25:
@@ -48,20 +85,20 @@ for i in range(0,n):
 
 		if j == n-1: # frontera vertical der
 			if i == 0: # punto superior
-				equations.append(Eq(t[i+1,j] + t[i,j-1] - (2*t[i,j]*(1+h)),0))
+				equations.append(Eq(t[i+1,j] + t[i,j-1] - (2*t[i,j]*(1+h_e)),0))
 				counter+=1
 
 			elif i > 0 and i < n-1: # demas
-				equations.append(Eq(2*t[i,j-1] + t[i+1,j] + t[i-1,j] - 2*t[i,j]*(2+h),0))
+				equations.append(Eq(2*t[i,j-1] + t[i+1,j] + t[i-1,j] - 2*t[i,j]*(2+h_e),0))
 				counter+=1
 
 			elif i == n-1: # punto inferior
-				equations.append(Eq(t[i-1,j] + t[i,j-1] - (t[i,j]*(2+h+h_l)),0))
+				equations.append(Eq(t[i-1,j] + t[i,j-1] - (t[i,j]*(2+h_e+h_l)),0))
 				counter+=1
 
 		if i == 0: # frontera horizontal sup
 			if j > 0 and j < n-1: # demas
-				equations.append(Eq(2*t[i+1,j] + t[i,j-1] + t[i,j+1] - 2*t[i,j]*(2+h),0))
+				equations.append(Eq(2*t[i+1,j] + t[i,j-1] + t[i,j+1] - 2*t[i,j]*(2+h_e),0))
 				counter+=1
 
 		if i == n-1: # frontera horizontal inf
