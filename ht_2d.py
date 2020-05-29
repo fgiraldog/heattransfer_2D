@@ -53,13 +53,17 @@ def solver(l,L,v_e,v_f,caso): #caso = True 'Sin aletas', False 'Con aletas'
 	h_f = Nu_f*k_f/D 
 
 	# Aletas
-	N = 5 # numero de aletas por un lado
-	eta = 0.7 # Eficiencia
-	A_o = l*(L/(2*N)) # Area entre aletas
-	A_f = 2*0.1*l + (L/(2*N))*l # Area de la aleta
-	A_b = l*(L/(2*N)) # Area de la base de la aleta
-	H_e = (h_e*A_o + eta*h_e*A_f)/(A_o + A_b)
-
+	N = 6 # numero de aletas por un lado
+	L_a = 0.1 # Longitud de las aletas
+	t = L/(2*N) # Espesor de las aletas
+	A_o = l*t # Area entre aletas
+	A_b = l*t # Area de la base de la aleta
+	A_f = 2*L_a*l + t*l # Area de la aleta
+	P = 2*l+2*t # Perimetro de la aleta
+	m = np.sqrt(h_e*P/(k*A_b)) # Parametro de la aleta
+	L_c = L_a+(t/2) # Longitud corregida
+	eta = np.tanh(m*L_c)/(m*L_c) # Eficiencia
+	H_e = h_e*(A_o + eta*A_f)/(A_o + A_b)
 	############## Adimensionalización ##############
 
 	h_l = 0. # frontera aislada
@@ -221,8 +225,8 @@ def solver(l,L,v_e,v_f,caso): #caso = True 'Sin aletas', False 'Con aletas'
 	print('Temperatura máxima en la pared del conducto: {:.2f} ºC'.format((np.min(t)*T_e) + T_e + (4*Q/(r_f*((0.5*L)**2)*v_f*Cp_f))), '\n')
 
 
-	fig = plt.figure(figsize = (5,10))
-	ax1 = fig.add_subplot(2,1,1)
+	fig = plt.figure(figsize = (10,5))
+	ax1 = fig.add_subplot(1,2,1)
 	ax1.imshow(t.reshape(n,n), cmap = cm.viridis, extent = [0,1,0,1], aspect = 'auto')
 	ax1.set_xticks([0,0.25,0.5,0.75,1])
 	ax1.set_yticks([0,0.25,0.5,0.75,1])
@@ -230,7 +234,7 @@ def solver(l,L,v_e,v_f,caso): #caso = True 'Sin aletas', False 'Con aletas'
 	ax1.set_xlabel('$x$ (m)')
 	ax1.set_ylabel('$y$ (m)')
 
-	ax2 = fig.add_subplot(2,1,2)
+	ax2 = fig.add_subplot(1,2,2)
 	CS = ax2.contour(x, y, t.reshape(n,n), 25)
 	ax2.clabel(CS, inline=1, fontsize=6)
 	ax2.set_xticks([0,0.25,0.5,0.75,1])
@@ -242,8 +246,12 @@ def solver(l,L,v_e,v_f,caso): #caso = True 'Sin aletas', False 'Con aletas'
 
 	plt.tight_layout()
 	plt.show()
+	#if caso:
+	#	plt.savefig('sin_aletas.png')
+	#else:
+	#	plt.savefig('con_aletas.png')
 
 ############## Variables para cambiar ##############
 
 solver(2.7,0.3,5.,0.2,True)
-solver(1.9,0.3,5.,0.2,False)
+solver(2.0,0.3,5.,0.2,False)
