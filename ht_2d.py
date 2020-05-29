@@ -5,13 +5,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-############## Variables para cambiar ##############
-
-l = 3.8 # Longitud de la pieza
-L = 0.37 # Media longitud del lado del perfil de la pieza
-v_e = 15. # Velocidad del aire
-v_f = 7. # Velocidad del refrigerante
-
 ############## Variables Fijas ##############
 
 Q = 15000. # Calor generado en cuadrante simulado
@@ -20,64 +13,71 @@ k = 5. # Conductividad de la pieza
 
 # Exterior
 T_e = 25. # Temperatura exterior (aire)
-u_e = 1.33e-5 # Viscocidad cinematica del aire
+u_e = 1.55e-5 # Viscocidad cinematica del aire
 k_e = 0.024 # Conductividad del aire
 r_e = 1.09 # Densidad del aire
-Cp_e = 1.214 # Capacidad calorífica del aire
+Cp_e = 1005. # Capacidad calorífica del aire
 
 # Refrigerante
 T_f = 25. # Temperatura interior (refrigerante)
 u_f = 0.295e-6 # Viscocidad cinematica del refrigerante
 k_f = 0.58 # Conductividad del refrigerante
-r_f = 961. # Densidad del refrigerante
-Cp_f = 4.181 # Capacidad calorífica del refrigerante
+r_f = 997. # Densidad del refrigerante
+Cp_f = 4181. # Capacidad calorífica del refrigerante
 
-############## Calculo de h* ##############
+def solver(l,L,v_e,v_f,caso): #caso = True 'Sin aletas', False 'Con aletas'
 
-# Exterior
-alpha_e = k_e/(r_e*Cp_e) # Difusividad termica del aire
-Pr_e = u_e/alpha_e # Prandtl para el aire
-Re_e = v_e*l/u_e # Reynolds para el aire
-if Re_e < 10**5:
-	Nu_e = 0.664*(Re_e**(1/2))*(Pr_e**(1/3))
-else:
-	Nu_e = 0.037*((Re_e**(4/5))-871)*(Pr_e**(1/3))
-h_e = Nu_e*k_e/l 
+	print('Caudal del refrigerante = {:.3f} m^3/s'.format(v_f*(0.5*L)**2), '\n')
 
-# Refrigerante
-D = L/2.
-alpha_f = k_f/(r_f*Cp_f) # Difusividad termica del refrigerante
-Pr_f = u_f/alpha_f # Prandtl para el refrigerante
-Re_f = v_f*D/u_f # Reynolds para el refrigerante
-if Re_f < 10**4:
-	Nu_f = 4.36
-else:
-	Nu_f = 0.023*(Re_f**(4/5))*(Pr_f**(1/3))
-h_f = Nu_f*k_f/D 
+	############## Calculo de h* ##############
 
-# Aletas
-N = 10 # numero de aletas por un lado
-eta = 0.7 # Eficiencia
-A_o = l*(L/(2*N)) # Area entre aletas
-A_f = 1. # Area de la aleta
-A_b = l*(L/(2*N)) # Area de la base de la aleta
-H_e = (h_e*A_o + eta*h_e*A_f)/(A_o + A_b)
+	# Exterior
+	alpha_e = k_e/(r_e*Cp_e) # Difusividad termica del aire
+	Pr_e = u_e/alpha_e # Prandtl para el aire
+	Re_e = v_e*l/u_e # Reynolds para el aire
+	if Re_e < 10**5:
+		Nu_e = 0.664*(Re_e**(1/2))*(Pr_e**(1/3))
+	else:
+		Nu_e = 0.037*((Re_e**(4/5))-871)*(Pr_e**(1/3))
+	h_e = Nu_e*k_e/l 
 
-############## Adimensionalización ##############
+	# Refrigerante
+	D = L/2.
+	alpha_f = k_f/(r_f*Cp_f) # Difusividad termica del refrigerante
+	Pr_f = u_f/alpha_f # Prandtl para el refrigerante
+	Re_f = v_f*D/u_f # Reynolds para el refrigerante
+	if Re_f < 10**4:
+		Nu_f = 4.36
+	else:
+		Nu_f = 0.023*(Re_f**(4/5))*(Pr_f**(1/3))
+	h_f = Nu_f*k_f/D 
 
-h_l = 0. # frontera aislada
-h_e = (h_e*L/k)*delta # frontera externa
-h_f = (h_f*L/k)*delta # frontera interna
-H_e = (H_e*L/k)*delta # aletas
+	# Aletas
+	N = 5 # numero de aletas por un lado
+	eta = 0.7 # Eficiencia
+	A_o = l*(L/(2*N)) # Area entre aletas
+	A_f = 2*0.1*l + (L/(2*N))*l # Area de la aleta
+	A_b = l*(L/(2*N)) # Area de la base de la aleta
+	H_e = (h_e*A_o + eta*h_e*A_f)/(A_o + A_b)
 
-q = Q/(l*3*(0.25*L)**2) # Calor por unidad de volumen
-q = (q*L**2/(k*T_e))*(delta**2) # generación de calor adimensional
+	############## Adimensionalización ##############
 
-print('h_f* = {:.3f}, h_e* = {:.3f}, H_e* = {:.3f}'.format(h_f/delta,h_e/delta,H_e/delta), '\n')
+	h_l = 0. # frontera aislada
+	h_e = (h_e*L/k)*delta # frontera externa
+	h_f = (h_f*L/k)*delta # frontera interna
+	H_e = (H_e*L/k)*delta # aletas
 
-############## Solución numérica ##############
+	q = Q/(l*3*(0.25*L)**2) # Calor por unidad de volumen
+	q = (q*L**2/(k*T_e))*(delta**2) # generación de calor adimensional
 
-def solver(h_l,h_e,h_f,q,caso):
+	if caso:
+		print('h_f* = {:.3f}, h_e* = {:.3f}'.format(h_f/delta,h_e/delta), '\n')
+	else:
+		print('h_f* = {:.3f}, H_e* = {:.3f}'.format(h_f/delta,H_e/delta), '\n')
+		h_e = H_e
+
+	############## Solución numérica ##############
+
 	n = int(1/delta) + 1 # numero de nodos
 	t = symarray('t',(n,n)) # nodos
 	equations = [] # array de ecuaciones
@@ -212,32 +212,38 @@ def solver(h_l,h_e,h_f,q,caso):
 	y = np.linspace(1,0,n)
 	x,y = np.meshgrid(x,y)
 
-	print(caso, '\n')
+	if caso:
+		print('Sin aletas', '\n')
+	else:
+		print('Con aletas', '\n')
+
 	print('Temperatura máxima en la pieza: {:.2f} ºC'.format((np.max(t)*T_e) + T_e))
-	print('Temperatura máxima en la pared del conducto: {:.2f} ºC'.format((np.min(t)*T_e) + T_e + (Q/(r_f*((0.25*L)**2)*v_f*Cp_f))), '\n')
+	print('Temperatura máxima en la pared del conducto: {:.2f} ºC'.format((np.min(t)*T_e) + T_e + (4*Q/(r_f*((0.5*L)**2)*v_f*Cp_f))), '\n')
 
 
-	# fig = plt.figure(figsize = (5,10))
-	# ax1 = fig.add_subplot(2,1,1)
-	# ax1.imshow(t.reshape(n,n), cmap = cm.viridis, extent = [0,1,0,1], aspect = 'auto')
-	# ax1.set_xticks([0,0.25,0.5,0.75,1])
-	# ax1.set_yticks([0,0.25,0.5,0.75,1])
-	# ax1.set_title('Temperatura por nodo')
-	# ax1.set_xlabel('$x$ (m)')
-	# ax1.set_ylabel('$y$ (m)')
+	fig = plt.figure(figsize = (5,10))
+	ax1 = fig.add_subplot(2,1,1)
+	ax1.imshow(t.reshape(n,n), cmap = cm.viridis, extent = [0,1,0,1], aspect = 'auto')
+	ax1.set_xticks([0,0.25,0.5,0.75,1])
+	ax1.set_yticks([0,0.25,0.5,0.75,1])
+	ax1.set_title('Temperatura por nodo')
+	ax1.set_xlabel('$x$ (m)')
+	ax1.set_ylabel('$y$ (m)')
 
-	# ax2 = fig.add_subplot(2,1,2)
-	# CS = ax2.contour(x, y, t.reshape(n,n), 25)
-	# ax2.clabel(CS, inline=1, fontsize=6)
-	# ax2.set_xticks([0,0.25,0.5,0.75,1])
-	# ax2.set_yticks([0,0.25,0.5,0.75,1])
-	# ax2.set_title('Líneas de contorno')
-	# ax2.set_xlabel('$x$ (m)')
-	# ax2.set_ylabel('$y$ (m)')
+	ax2 = fig.add_subplot(2,1,2)
+	CS = ax2.contour(x, y, t.reshape(n,n), 25)
+	ax2.clabel(CS, inline=1, fontsize=6)
+	ax2.set_xticks([0,0.25,0.5,0.75,1])
+	ax2.set_yticks([0,0.25,0.5,0.75,1])
+	ax2.set_title('Líneas de contorno')
+	ax2.set_xlabel('$x$ (m)')
+	ax2.set_ylabel('$y$ (m)')
 
 
-	# plt.tight_layout()
-	# plt.show()
+	plt.tight_layout()
+	plt.show()
 
-solver(h_l,h_e,h_f,q,'Sin aletas')
-solver(h_l,H_e,h_f,q,'Con aletas')
+############## Variables para cambiar ##############
+
+solver(2.7,0.3,5.,0.2,True)
+solver(1.9,0.3,5.,0.2,False)
